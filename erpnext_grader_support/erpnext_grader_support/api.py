@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import hmac
+
 import frappe
 from frappe import _
 from frappe.utils import get_datetime, now_datetime
@@ -20,7 +22,7 @@ def _require_bearer() -> None:
 	expiry = frappe.db.get_single_value(CONNECTION_DOCTYPE, "token_expiry")
 	if not stored or not expiry or get_datetime(expiry) <= now_datetime():
 		frappe.throw(_("Site not linked or token expired."), frappe.AuthenticationError)
-	if sent != stored:
+	if not hmac.compare_digest(sent, stored):
 		frappe.throw(_("Invalid grader token."), frappe.AuthenticationError)
 
 

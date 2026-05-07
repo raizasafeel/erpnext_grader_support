@@ -5,6 +5,40 @@ from typing import Any
 
 import frappe
 
+_DENIED_DOCTYPES = frozenset(
+	{
+		"User",
+		"API Key",
+		"Server Script",
+		"Client Script",
+		"Webhook",
+		"Email Account",
+		"Email Domain",
+		"LDAP Settings",
+		"Social Login Key",
+		"System Settings",
+		"Token Cache",
+		"Integration Request",
+		"OAuth Bearer Token",
+		"OAuth Authorization Code",
+		"OAuth Client",
+		"OAuth Provider Settings",
+		"Auth Provider",
+		"Domain Settings",
+		"File",
+	}
+)
+
+
+def _doctype_allowed(doctype: str | None) -> bool:
+	if not doctype:
+		return False
+	if doctype in _DENIED_DOCTYPES:
+		return False
+	# Block any doctype starting with "OAuth " or "Password " etc. just in case
+	# a future Frappe release adds new sensitive ones with predictable prefixes.
+	return not doctype.startswith(("OAuth ", "Password "))
+
 
 def _norm(val: Any) -> str:
 	return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9\s]", "", str(val or "").lower())).strip()
@@ -310,8 +344,20 @@ def run_checks(checks: dict) -> dict:
 	results: list[dict] = []
 	for section, entries in (checks or {}).items():
 		for entry in entries or []:
-			doc = _fetch_doc(entry)
 			title = entry.get("title", "")
+			if not _doctype_allowed(entry.get("doctype")):
+				for check in entry.get("checks", []) or []:
+					r = _res(
+						check,
+						False,
+						expected="permitted doctype",
+						actual=f"Doctype '{entry.get('doctype')}' is not allowed for grading.",
+					)
+					r["section"] = section
+					r["title"] = title
+					results.append(r)
+				continue
+			doc = _fetch_doc(entry)
 			for check in entry.get("checks", []) or []:
 				fn = _CHECKS.get(check.get("check_type"))
 				if fn:
