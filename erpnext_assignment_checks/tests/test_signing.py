@@ -46,6 +46,8 @@ class TestSigning(IntegrationTestCase):
 			"missing sig": (headers(**{"X-Grader-Signature": ""}), HOST, PATH, BODY, int(TS)),
 			"garbage sig": (headers(**{"X-Grader-Signature": "!!"}), HOST, PATH, BODY, int(TS)),
 			"non-numeric ts": (headers(**{"X-Grader-Timestamp": "1e9"}), HOST, PATH, BODY, int(TS)),
+			"unicode digit ts": (headers(**{"X-Grader-Timestamp": "\u00b2"}), HOST, PATH, BODY, int(TS)),
+			"overlong ts": (headers(**{"X-Grader-Timestamp": "9" * 5000}), HOST, PATH, BODY, int(TS)),
 			"oversized": (headers(), HOST, PATH, b"x" * (256 * 1024 + 1), int(TS)),
 		}
 		for label, args in cases.items():

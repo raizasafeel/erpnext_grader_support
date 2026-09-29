@@ -29,7 +29,8 @@ def verify(
 	key_pem = PUBLIC_KEYS.get(headers.get("X-Grader-Key-Id") or "")
 	timestamp = headers.get("X-Grader-Timestamp") or ""
 	signature = headers.get("X-Grader-Signature") or ""
-	if not key_pem or not timestamp.isdigit() or not signature or len(body) > MAX_BODY_BYTES:
+	valid_timestamp = timestamp.isascii() and timestamp.isdigit() and len(timestamp) <= 12
+	if not key_pem or not valid_timestamp or not signature or len(body) > MAX_BODY_BYTES:
 		return False
 	now = time.time() if now is None else now
 	if abs(now - int(timestamp)) > MAX_SKEW_SECONDS:
