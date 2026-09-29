@@ -32,10 +32,15 @@ def run_checks(checks: list) -> list[dict]:
 			results.append({"check_id": check_id, "found_count": _count(check)})
 		except CheckError as e:
 			results.append({"check_id": check_id, "error": e.code})
+		except Exception:
+			frappe.log_error("Grader check failed")
+			results.append({"check_id": check_id, "error": "invalid"})
 	return results
 
 
 def _count(check: dict) -> int:
+	if not isinstance(check, dict):
+		raise CheckError("invalid")
 	doctype = check.get("target_doctype")
 	filters = check.get("filters")
 	if not isinstance(doctype, str) or not isinstance(filters, list):
@@ -58,7 +63,13 @@ def _count(check: dict) -> int:
 
 
 def _validate_filter(f, allowed: frozenset) -> None:
-	if not (isinstance(f, list) and len(f) == 3 and isinstance(f[0], str) and f[1] in OPERATORS):
+	if not (
+		isinstance(f, list)
+		and len(f) == 3
+		and isinstance(f[0], str)
+		and isinstance(f[1], str)
+		and f[1] in OPERATORS
+	):
 		raise CheckError("invalid")
 	field, op, value = f
 	if op == "is":

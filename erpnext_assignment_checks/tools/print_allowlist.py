@@ -21,7 +21,7 @@ def fields_of(filters):
 
 def main(path):
 	allowed = defaultdict(set)
-	with open(path) as fh:  # nosemgrep: frappe-security-file-traversal (dev-only tool, path from the developer shell)
+	with open(path) as fh:  # nosemgrep: frappe-security-file-traversal
 		rows = json.load(fh)
 	for row in rows:
 		for entries in json.loads(row.get("checks") or "{}").values():
@@ -39,7 +39,7 @@ def main(path):
 						allowed[dt] |= {f"{table}.{f}" for f in match} or {f"{table}.name"}
 	print("ALLOWED: dict[str, frozenset[str]] = {")
 	for dt in sorted(allowed):
-		print(f"\t{dt!r}: frozenset({sorted(allowed[dt])!r}),")
+		print(f"\t{json.dumps(dt)}: frozenset({json.dumps(sorted(allowed[dt]))}),")
 	print("}")
 
 
