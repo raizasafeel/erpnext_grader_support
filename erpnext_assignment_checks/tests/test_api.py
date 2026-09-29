@@ -62,6 +62,7 @@ class TestApi(IntegrationTestCase):
 			("verify_owner", api.verify_owner, [1]),
 			("run_checks", api.run_checks, {"checks": "nope"}),
 			("run_checks", api.run_checks, {}),
+			("run_checks", api.run_checks, {"checks": [{"check_id": "a"}] * 301}),
 		):
 			with self.subTest(method=method, body=body):
 				fake_request(method, body)
@@ -86,7 +87,26 @@ class TestApi(IntegrationTestCase):
 				"roles": [{"role": "System Manager"}],
 			}
 		).insert()
+		if not frappe.db.exists("Role Profile", "probe-sysmgr"):
+			frappe.get_doc(
+				{
+					"doctype": "Role Profile",
+					"role_profile": "probe-sysmgr",
+					"roles": [{"role": "System Manager"}],
+				}
+			).insert()
+		profile_user = {
+			"doctype": "User",
+			"email": "profile-probe@example.com",
+			"first_name": "R",
+			"role_profile_name": "probe-sysmgr",
+		}
+		if frappe.get_meta("User").has_field("role_profiles"):
+			profile_user["role_profiles"] = [{"role_profile": "probe-sysmgr"}]
+		frappe.get_doc(profile_user).insert()
 		for email, ok in (
+			("profile-probe@example.com", True),
+			("admin@example.com", False),
 			("owner-probe@example.com", True),
 			("plain-probe@example.com", False),
 			(disabled.email, False),
