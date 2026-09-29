@@ -7,7 +7,7 @@ from frappe import _
 from frappe.utils import get_datetime, now_datetime
 from frappe.utils.password import get_decrypted_password
 
-from erpnext_grader_support.erpnext_grader_support.checks import run_checks
+from erpnext_assignment_checks.erpnext_assignment_checks.checks import run_checks
 
 CONNECTION_DOCTYPE = "ERPNext Grader Connection"
 

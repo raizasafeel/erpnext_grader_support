@@ -1,4 +1,4 @@
-### Erpnext Grader Support
+### ERPNext Assignment Checks
 
 Grader support app to be installed on erpnext websites to grade the erpnext assignment on frappe school
 
@@ -9,7 +9,7 @@ You can install this app using the [bench](https://github.com/frappe/bench) CLI:
 ```bash
 cd $PATH_TO_YOUR_BENCH
 bench get-app $URL_OF_THIS_REPO --branch develop
-bench install-app erpnext_grader_support
+bench install-app erpnext_assignment_checks
 ```
 
 ### Contributing
@@ -17,7 +17,7 @@ bench install-app erpnext_grader_support
 This app uses `pre-commit` for code formatting and linting. Please [install pre-commit](https://pre-commit.com/#installation) and enable it for this repository:
 
 ```bash
-cd apps/erpnext_grader_support
+cd apps/erpnext_assignment_checks
 pre-commit install
 ```
 

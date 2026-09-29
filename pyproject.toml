@@ -1,5 +1,5 @@
 [project]
-name = "erpnext_grader_support"
+name = "erpnext_assignment_checks"
 authors = [
     { name = "Raiza", email = "raizasafeel@gmail.com"}
 ]
