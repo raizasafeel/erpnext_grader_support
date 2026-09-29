@@ -4,6 +4,7 @@ app_publisher = "Raiza"
 app_description = "Grader support app to be installed on erpnext websites to grade the erpnext assignment on frappe school"
 app_email = "raizasafeel@gmail.com"
 app_license = "mit"
+required_apps = ["erpnext"]
 
 # Apps
 # ------------------
