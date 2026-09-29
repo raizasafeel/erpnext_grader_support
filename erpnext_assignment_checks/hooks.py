@@ -85,7 +85,6 @@ app_license = "mit"
 # Installation
 # ------------
 
-after_install = "erpnext_assignment_checks.install.after_install"
 
 # Uninstallation
 # ------------
