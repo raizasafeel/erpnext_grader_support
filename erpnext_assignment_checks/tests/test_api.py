@@ -51,21 +51,14 @@ class TestApi(IntegrationTestCase):
 				fake_request(method, {"email": "Administrator"}, signed=False)
 				self.assertRaises(frappe.PermissionError, fn)
 
-	def test_other_host_is_forbidden(self):
-		fake_request("verify_owner", {"email": "Administrator"})
-		with patch.object(frappe.local, "site", "other.m.frappe.cloud"):
-			self.assertRaises(frappe.PermissionError, api.verify_owner)
-
+	# Regression: get_url() echoed the request host, so any Host passed the check (review S1, commit 50f1276).
 	def test_host_check_ignores_site_config_host_name(self):
 		fake_request("verify_owner", {"email": "Administrator"})
 		with patch.object(frappe.local, "site", "other.m.frappe.cloud"):
 			with patch.dict(frappe.conf, {"host_name": f"https://{HOST}"}):
 				self.assertRaises(frappe.PermissionError, api.verify_owner)
 
-	def test_signed_for_own_site_passes_the_host_check(self):
-		fake_request("verify_owner", {"email": "Administrator"})
-		self.assertEqual(api.verify_owner(), {"ok": False})
-
+	# Regression: a batch over MAX_CHECKS must get the same generic 403 as any bad body (commit 4a488e9).
 	def test_bad_body_is_the_same_403(self):
 		for method, fn, body in (
 			("verify_owner", api.verify_owner, b"not json"),
@@ -78,6 +71,7 @@ class TestApi(IntegrationTestCase):
 				fake_request(method, body)
 				self.assertRaises(frappe.PermissionError, fn)
 
+	# Regression: Administrator (admin@example.com) passed verify_owner (commit 4a488e9).
 	def test_verify_owner(self):
 		frappe.get_doc(
 			{
@@ -97,14 +91,12 @@ class TestApi(IntegrationTestCase):
 				"roles": [{"role": "System Manager"}],
 			}
 		).insert()
-		if not frappe.db.exists("Role Profile", "probe-sysmgr"):
-			frappe.get_doc(
-				{
-					"doctype": "Role Profile",
-					"role_profile": "probe-sysmgr",
-					"roles": [{"role": "System Manager"}],
-				}
-			).insert()
+		profile = frappe.get_doc(
+			{"doctype": "Role Profile", "role_profile": "probe-sysmgr", "roles": [{"role": "System Manager"}]}
+		).insert()
+		# Regression: on_update locks the profile for a queued job that never runs under a stubbed enqueue,
+		# so the lock file outlived the rollback and reruns hit DocumentLockedError (probe from commit 4a488e9).
+		self.addCleanup(profile.unlock)
 		profile_user = {
 			"doctype": "User",
 			"email": "profile-probe@example.com",

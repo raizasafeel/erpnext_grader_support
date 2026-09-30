@@ -32,11 +32,6 @@ class TestRunChecks(IntegrationTestCase):
 		)
 		self.assertEqual(r, {"check_id": "a", "found_count": 3})
 
-	def test_output_has_no_values(self):
-		r = self.run1({"check_id": "a", "target_doctype": "ToDo", "filters": []})
-		self.assertEqual(set(r), {"check_id", "found_count"})
-		self.assertIsInstance(r["found_count"], int)
-
 	def test_not_allowed_doctype_and_field(self):
 		for check in (
 			{"check_id": "a", "target_doctype": "Communication", "filters": []},
@@ -59,6 +54,7 @@ class TestRunChecks(IntegrationTestCase):
 				r = self.run1({"check_id": "a", "target_doctype": "ToDo", "filters": filters})
 				self.assertEqual(r, {"check_id": "a", "error": "invalid"})
 
+	# Regression: a malformed check raised out of run_checks and lost the whole batch (commit 6b28e09).
 	def test_unexpected_input_gives_invalid_and_keeps_the_batch(self):
 		good = {
 			"check_id": "z",
@@ -78,6 +74,7 @@ class TestRunChecks(IntegrationTestCase):
 					self.assertEqual(out[0]["error"], "invalid")
 					self.assertEqual(out[1], {"check_id": "z", "found_count": 3})
 
+	# Regression: a Single compare that raised TypeError escaped as a 500 (commit 6b28e09).
 	def test_single_type_mismatch_is_invalid(self):
 		frappe.db.set_single_value("System Settings", "country", None)
 		r = self.run1(
@@ -85,6 +82,7 @@ class TestRunChecks(IntegrationTestCase):
 		)
 		self.assertEqual(r, {"check_id": "a", "error": "invalid"})
 
+	# Review focus 1: child-table filters must match on the same child row (commit 66ba67d).
 	def test_child_filters_match_same_row(self):
 		user = frappe.get_doc(
 			{

@@ -35,6 +35,7 @@ class TestSigning(IntegrationTestCase):
 	def test_valid_vector(self):
 		self.assertTrue(signing.verify(headers(), HOST, PATH, BODY, now=int(TS)))
 
+	# Regression: unicode-digit and overlong timestamps passed isdigit() and crashed int() (commit eb57ff3).
 	def test_rejects(self):
 		cases = {
 			"tampered body": (headers(), HOST, PATH, b'{"email":"x@example.com"}', int(TS)),
