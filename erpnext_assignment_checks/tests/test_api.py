@@ -41,9 +41,9 @@ def fake_request(method: str, payload, signed: bool = True) -> None:
 class TestApi(IntegrationTestCase):
 	def setUp(self):
 		self.addCleanup(frappe.db.rollback)
-		site_url = patch.object(signing, "get_url", return_value=f"https://{HOST}")
-		site_url.start()
-		self.addCleanup(site_url.stop)
+		site = patch.object(frappe.local, "site", HOST)
+		site.start()
+		self.addCleanup(site.stop)
 
 	def test_unsigned_is_forbidden(self):
 		for method, fn in (("verify_owner", api.verify_owner), ("run_checks", api.run_checks)):
@@ -53,8 +53,18 @@ class TestApi(IntegrationTestCase):
 
 	def test_other_host_is_forbidden(self):
 		fake_request("verify_owner", {"email": "Administrator"})
-		with patch.object(signing, "get_url", return_value="https://other.m.frappe.cloud"):
+		with patch.object(frappe.local, "site", "other.m.frappe.cloud"):
 			self.assertRaises(frappe.PermissionError, api.verify_owner)
+
+	def test_host_check_ignores_site_config_host_name(self):
+		fake_request("verify_owner", {"email": "Administrator"})
+		with patch.object(frappe.local, "site", "other.m.frappe.cloud"):
+			with patch.dict(frappe.conf, {"host_name": f"https://{HOST}"}):
+				self.assertRaises(frappe.PermissionError, api.verify_owner)
+
+	def test_signed_for_own_site_passes_the_host_check(self):
+		fake_request("verify_owner", {"email": "Administrator"})
+		self.assertEqual(api.verify_owner(), {"ok": False})
 
 	def test_bad_body_is_the_same_403(self):
 		for method, fn, body in (

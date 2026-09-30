@@ -3,13 +3,11 @@ import binascii
 import hashlib
 import time
 from collections.abc import Mapping
-from urllib.parse import urlparse
 
 import frappe
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.serialization import load_pem_public_key
 from frappe import _
-from frappe.utils import get_url
 
 MAX_SKEW_SECONDS = 300
 MAX_BODY_BYTES = 256 * 1024
@@ -48,6 +46,7 @@ def verify(
 def require_signature() -> None:
 	request = frappe.request
 	host = (request.host or "").rsplit(":", 1)[0].lower()
-	own_host = (urlparse(get_url()).hostname or "").lower()
-	if host != own_host or not verify(request.headers, host, request.path, request.get_data()):
+	if host != (frappe.local.site or "").lower() or not verify(
+		request.headers, host, request.path, request.get_data()
+	):
 		frappe.throw(_("Forbidden"), frappe.PermissionError)
