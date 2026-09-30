@@ -13,6 +13,15 @@ bench get-app <repo url> --branch v2
 bench --site <site> install-app erpnext_assignment_checks
 ```
 
+## Upgrading from v1
+
+v2 replaces `erpnext_grader_support`. It does not run beside it.
+
+1. On the trial site, uninstall the v1 app first: `bench --site <site> uninstall-app erpnext_grader_support`.
+2. Install `erpnext_assignment_checks`.
+3. The portal serves the same `/assignments-portal/erpnext` route as v1, so the student links their trial again. v1 links and submissions are not migrated.
+4. Existing trials are updated the same way: uninstall v1, then install this app.
+
 ## What it exposes
 
 Two guest-accessible POST endpoints. Both require a valid signature, and the request host must equal the site's own host.
