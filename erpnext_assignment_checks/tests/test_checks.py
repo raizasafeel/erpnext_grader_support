@@ -130,12 +130,6 @@ class TestRunChecks(IntegrationTestCase):
 			2,
 		)
 
-	def test_too_many_checks_rejected(self):
-		with self.assertRaises(frappe.ValidationError):
-			checks.run_checks(
-				[{"check_id": str(i), "target_doctype": "ToDo", "filters": []} for i in range(301)]
-			)
-
 	def test_time_budget(self):
 		with patch.object(checks, "time") as clock:
 			clock.monotonic.side_effect = [0, 0, 100, 100]

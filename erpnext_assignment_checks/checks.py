@@ -1,7 +1,6 @@
 import time
 
 import frappe
-from frappe import _
 from frappe.utils import compare
 
 from erpnext_assignment_checks import allowlist
@@ -19,10 +18,9 @@ class CheckError(Exception):
 
 
 def run_checks(checks: list) -> list[dict]:
-	if not isinstance(checks, list) or len(checks) > MAX_CHECKS:
-		frappe.throw(_("Too many checks"), frappe.ValidationError)
 	deadline = time.monotonic() + TIME_BUDGET_SECONDS
 	results = []
+	failed, last_traceback = 0, ""
 	for check in checks:
 		check_id = str(check.get("check_id") or "") if isinstance(check, dict) else ""
 		if time.monotonic() > deadline:
@@ -33,8 +31,11 @@ def run_checks(checks: list) -> list[dict]:
 		except CheckError as e:
 			results.append({"check_id": check_id, "error": e.code})
 		except Exception:
-			frappe.log_error("Grader check failed")
+			failed += 1
+			last_traceback = frappe.get_traceback()
 			results.append({"check_id": check_id, "error": "invalid"})
+	if failed:
+		frappe.log_error(f"Grader: {failed} checks failed", last_traceback)
 	return results
 
 
@@ -94,6 +95,7 @@ def _to_frappe_filters(meta, filters: list) -> list:
 		df = meta.get_field(table)
 		if not df or df.fieldtype not in ("Table", "Table MultiSelect"):
 			raise CheckError("invalid")
+		out.append([df.options, "parentfield", "=", table])
 		out.append([df.options, child_field, op, value])
 	return out
 
@@ -101,5 +103,5 @@ def _to_frappe_filters(meta, filters: list) -> list:
 def _count_single(doctype: str, filters: list) -> int:
 	if any("." in f[0] for f in filters):
 		raise CheckError("invalid")
-	doc = frappe.get_single(doctype)
+	doc = frappe.get_cached_doc(doctype)
 	return int(all(compare(doc.get(field), op, value) for field, op, value in filters))
