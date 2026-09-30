@@ -19,6 +19,18 @@ def fields_of(filters):
 	return {f[0] for f in normalise(filters)}
 
 
+def entry_fields(entry):
+	fields = {"name", "docstatus"} | fields_of(entry.get("filter"))
+	for check in entry.get("checks", []):
+		fields |= fields_of(check.get("filter"))
+		for item in check.get("fields_to_match") or []:
+			fields |= set(item) if isinstance(item, dict) else {item}
+		table = check.get("table")
+		for match in check.get("match") or []:
+			fields |= {f"{table}.{f}" for f in match} or {f"{table}.name"}
+	return fields
+
+
 def main(path):
 	allowed = defaultdict(set)
 	with open(path) as fh:  # nosemgrep: frappe-security-file-traversal
@@ -26,17 +38,8 @@ def main(path):
 	for row in rows:
 		for entries in json.loads(row.get("checks") or "{}").values():
 			for entry in entries:
-				dt = entry.get("doctype")
-				if not dt:
-					continue
-				allowed[dt] |= {"name", "docstatus"} | fields_of(entry.get("filter"))
-				for check in entry.get("checks", []):
-					allowed[dt] |= fields_of(check.get("filter"))
-					for item in check.get("fields_to_match") or []:
-						allowed[dt] |= set(item) if isinstance(item, dict) else {item}
-					table = check.get("table")
-					for match in check.get("match") or []:
-						allowed[dt] |= {f"{table}.{f}" for f in match} or {f"{table}.name"}
+				if entry.get("doctype"):
+					allowed[entry["doctype"]] |= entry_fields(entry)
 	print("ALLOWED: dict[str, frozenset[str]] = {")
 	for dt in sorted(allowed):
 		print(f"\t{json.dumps(dt)}: frozenset({json.dumps(sorted(allowed[dt]))}),")

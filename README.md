@@ -48,7 +48,7 @@ Public keys live in `PUBLIC_KEYS` in `erpnext_assignment_checks/signing.py`, key
 - At most 300 checks per request.
 - A count is capped at 1000.
 - 20 seconds total per request. Checks past the deadline return `timeout`.
-- Only doctypes and fields listed in `erpnext_assignment_checks/allowlist.py` can be counted. Anything else returns `not_allowed`. `tools/print_allowlist.py` builds the list from the v1 check data.
+- Only doctypes and fields listed in `erpnext_assignment_checks/allowlist.py` can be counted. Anything else returns `not_allowed`. `scripts/print_allowlist.py` (not shipped in the package) builds the list from the v1 check data.
 
 ## Development
 

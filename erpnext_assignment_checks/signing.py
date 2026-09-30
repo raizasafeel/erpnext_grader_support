@@ -21,9 +21,7 @@ def signing_message(host: str, timestamp: str, path: str, body: bytes) -> bytes:
 	return f"{host}\n{timestamp}\n{path}\n{hashlib.sha256(body).hexdigest()}".encode()
 
 
-def verify(
-	headers: Mapping[str, str], host: str, path: str, body: bytes, now: float | None = None
-) -> bool:
+def verify(headers: Mapping[str, str], host: str, path: str, body: bytes, now: float | None = None) -> bool:
 	key_pem = PUBLIC_KEYS.get(headers.get("X-Grader-Key-Id") or "")
 	timestamp = headers.get("X-Grader-Timestamp") or ""
 	signature = headers.get("X-Grader-Signature") or ""
