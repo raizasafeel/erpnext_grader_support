@@ -14,7 +14,13 @@ MAX_BODY_BYTES = 256 * 1024
 
 # key id -> Ed25519 public key PEM. Rotate by adding the new key in one
 # release and removing the old one in a later release.
-PUBLIC_KEYS: dict[str, str] = {}
+PUBLIC_KEYS: dict[str, str] = {
+	"grader-2026-10": (
+		"-----BEGIN PUBLIC KEY-----\n"
+		"MCowBQYDK2VwAyEAnHKB3RxtVuT6GVa5mbo1oir1TDLwpWxdQjbL9L/CfeE=\n"
+		"-----END PUBLIC KEY-----\n"
+	),
+}
 
 
 def signing_message(host: str, timestamp: str, path: str, body: bytes) -> bytes:

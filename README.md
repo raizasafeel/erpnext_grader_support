@@ -41,7 +41,7 @@ Field values, document names, user details other than a yes/no, or error text. O
 
 Every request carries `X-Grader-Key-Id`, `X-Grader-Timestamp`, and `X-Grader-Signature`. The signature is Ed25519 over the host, timestamp, path, and SHA-256 of the body. A request is refused if the key id is unknown, the timestamp is more than 300 seconds off, the body is over 256 KB, or the signature is invalid. Refusals are a generic 403.
 
-Public keys live in `PUBLIC_KEYS` in `erpnext_assignment_checks/signing.py`, keyed by key id. The production key id is `grader-2026-10`. Only public keys are stored here; the private key lives on the portal site and is never committed. `PUBLIC_KEYS` is empty until the production public key is added, and until then every request is refused.
+Public keys live in `PUBLIC_KEYS` in `erpnext_assignment_checks/signing.py`, keyed by key id. The production key id is `grader-2026-10`. Only public keys are stored here; the private key lives on the portal site and is never committed.
 
 ## Limits
 
